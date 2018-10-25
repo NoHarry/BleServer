@@ -38,7 +38,7 @@ public class BLEAdmin {
   private BTStateReceiver btStateReceiver = null;
   private final BluetoothManager mBluetoothManager;
   private UUID UUID_SERVER=UUID.fromString("0000ffe5-0000-1000-8000-00805f9b34fb");
-  private UUID UUID_CHARREAD=UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
+  private UUID UUID_CHARREAD=UUID.fromString("0000ffe2-0000-1000-8000-00805f9b34fb");
   private UUID UUID_DESCRIPTOR=UUID.fromString("00002902-0000-1000-8000-00805F9B34FB");
   private UUID UUID_CHARWRITE=UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
   private BluetoothGattCharacteristic mCharacteristicWrite;
@@ -219,7 +219,6 @@ public class BLEAdmin {
         .addServiceData(new ParcelUuid(UUID_SERVER),new byte[]{0,2,3/*,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40*/})
         .build();
 
-//    mBluetoothAdapter.setName("android test huawei");
     mBluetoothAdapter.setName("Ble Server");
     mCallback = new AdvertiseCallback() {
 
@@ -265,8 +264,8 @@ public class BLEAdmin {
         BluetoothGattCharacteristic.PERMISSION_READ);
     //add a descriptor
     BluetoothGattDescriptor descriptor = new BluetoothGattDescriptor(UUID_DESCRIPTOR, BluetoothGattCharacteristic.PERMISSION_WRITE);
-//    characteristicRead.addDescriptor(descriptor);
-//    service.addCharacteristic(characteristicRead);
+    characteristicRead.addDescriptor(descriptor);
+    service.addCharacteristic(characteristicRead);
 
     //add a write characteristic.
     mCharacteristicWrite = new BluetoothGattCharacteristic(UUID_CHARWRITE,
@@ -308,30 +307,14 @@ public class BLEAdmin {
       super.onServiceAdded(status, service);
       L.e(String.format("onServiceAdded：status = %s", status));
     }
-//[65, 84, 49, 164, 61, 254, 128, 158, 178, 121, 6, 23, 53, 223, 194, 105, 237, 195, 209]
-    //[65, 84, 67, 46, 14, 214, 187, 196, 83, 207, 45, 223, 6, 164, 227, 179, 139, 129, 67]
+
     @Override
     public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic) {
       L.e(String.format("onCharacteristicReadRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
       L.e(String.format("onCharacteristicReadRequest：requestId = %s, offset = %s", requestId, offset));
-//      SystemClock.sleep(5000);
       bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.getValue());
                   super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
-                  byte[] firstRead=new byte[]{65, 84, 49, (byte) 164, 61, (byte) 254, (byte) 128,
-                      (byte) 158, (byte) 178, 121, 6, 23, 53, (byte) 223, (byte) 194, 105,
-                      (byte) 237, (byte) 195, (byte) 209};
-                  byte[] success=new byte[]{65, 84, 67, 46, 14, (byte) 214, (byte) 187, (byte) 196, 83,
-                      (byte) 207, 45, (byte) 223, 6, (byte) 164, (byte) 227, (byte) 179, (byte) 139,
-                      (byte) 129, 67};
-      /*if (isFirstRead){
-        sendMessage(firstRead);
-      }else {
-        sendMessage(success);
-      }*/
-      /*for (int i=0;i<5;i++){
-        sendMessage("read success"+i);
-      }*/
-      sendMessage("read success");
+
     }
 
     /**
@@ -347,15 +330,10 @@ public class BLEAdmin {
     @Override
     public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] requestBytes) {
       L.e(String.format("3.onCharacteristicWriteRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
-//      SystemClock.sleep(5000);
-      L.i("收到数据:"+Arrays.toString(requestBytes)+" 长度:"+requestBytes.length);
-      bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, requestBytes);
-      byte[] success=new byte[]{65, 84, 67, 46, 14, (byte) 214, (byte) 187, (byte) 196, 83,
-          (byte) 207, 45, (byte) 223, 6, (byte) 164, (byte) 227, (byte) 179, (byte) 139,
-          (byte) 129, 67};
+      L.i("收到数据 hex:"+byte2HexStr(requestBytes)+" str:"+new String(requestBytes)+" 长度:"+requestBytes.length);
+      bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, "write success1".getBytes());
       //4.处理响应内容
       onResponseToClient(requestBytes, device, requestId, characteristic);
-//      onResponseToClient(success, device, requestId, characteristic);
     }
 
     /**
@@ -370,7 +348,7 @@ public class BLEAdmin {
      */
     @Override
     public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor, boolean preparedWrite, boolean responseNeeded, int offset, byte[] value) {
-      L.e(String.format("2.onDescriptorWriteRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
+      L.e(String.format("2.onDescriptorWriteRequest：device name = %s, address = %s, value = %s", device.getName(), device.getAddress(),byte2HexStr(value)));
       //            L.e(TAG, String.format("2.onDescriptorWriteRequest：requestId = %s, preparedWrite = %s, responseNeeded = %s, offset = %s, value = %s,", requestId, preparedWrite, responseNeeded, offset, OutputStringUtil.toHexString(value)));
 
       // now tell the connected device that this was all successfull
@@ -388,7 +366,7 @@ public class BLEAdmin {
     public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor) {
       L.e(String.format("onDescriptorReadRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
       L.e(String.format("onDescriptorReadRequest：requestId = %s", requestId));
-      //            super.onDescriptorReadRequest(device, requestId, offset, descriptor);
+//                  super.onDescriptorReadRequest(device, requestId, offset, descriptor);
       bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, null);
     }
 
@@ -425,15 +403,9 @@ public class BLEAdmin {
     L.e(String.format("4.onResponseToClient：requestId = %s", requestId));
     //        String msg = OutputStringUtil.transferForPrint(reqeustBytes);
     String msg = new String(reqeustBytes);
-    L.i("4.收到:" + Arrays.toString(reqeustBytes));
+    L.i("4.收到 hex:" +byte2HexStr(reqeustBytes)+" str:"+msg);
     currentDevice = device;
-//    sendMessage("success");
-    sendMessage(reqeustBytes);
-    /*for (int i=0;i<10;i++){
-      SystemClock.sleep(1000);
-      sendMessage("success"+i);
-    }*/
-
+    sendMessage(characteristic,"write success");
   }
 
   private void sendMessage(String message) {
@@ -451,6 +423,16 @@ public class BLEAdmin {
     L.i("4.发送:" + message);
   }
 
+
+  private void sendMessage(BluetoothGattCharacteristic characteristic,String message) {
+    characteristic.setValue(message.getBytes());
+    if (currentDevice != null){
+      bluetoothGattServer.notifyCharacteristicChanged(currentDevice, characteristic, false);
+    }
+    L.i("4.notify发送 hex:" + byte2HexStr(message.getBytes())+" str:"+message);
+  }
+
+
   private void sendMessage(byte[] message) {
 //    byte[] i=new byte[]{6};
 //    characteristicRead.setValue(message.getBytes());
@@ -462,9 +444,34 @@ public class BLEAdmin {
       bluetoothGattServer.notifyCharacteristicChanged(currentDevice, mCharacteristicWrite, false);
     }
 
-
     L.i("4.发送:" + Arrays.toString(message));
   }
 
 
+  private void sendMessage(BluetoothGattCharacteristic characteristic,byte[] message) {
+    characteristic.setValue(message);
+    if (currentDevice != null){
+      bluetoothGattServer.notifyCharacteristicChanged(currentDevice, characteristic, false);
+    }
+
+    L.i("4.notify发送 hex:" + byte2HexStr(message)+" str:"+new String(message));
+  }
+
+  public  String byte2HexStr(byte[] value){
+    char[] chars = "0123456789ABCDEF".toCharArray();
+    StringBuilder sb = new StringBuilder("");
+    int bit;
+
+    for (int i = 0; i < value.length; i++) {
+      bit = (value[i] & 0x0F0) >> 4;
+      sb.append(chars[bit]);
+      bit = value[i] & 0x0F;
+      sb.append(chars[bit]);
+      if (i!=value.length-1){
+        sb.append('-');
+      }
+
+    }
+    return "(0x) "+sb.toString().trim();
+  }
 }
