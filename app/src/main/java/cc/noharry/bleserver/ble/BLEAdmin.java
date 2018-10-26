@@ -37,6 +37,7 @@ public class BLEAdmin {
   private final Handler mHandler;
   private BTStateReceiver btStateReceiver = null;
   private final BluetoothManager mBluetoothManager;
+  private UUID UUID_ADV_SERVER=UUID.fromString("0000ffe3-0000-1000-8000-00805f9b34fb");
   private UUID UUID_SERVER=UUID.fromString("0000ffe5-0000-1000-8000-00805f9b34fb");
   private UUID UUID_CHARREAD=UUID.fromString("0000ffe2-0000-1000-8000-00805f9b34fb");
   private UUID UUID_DESCRIPTOR=UUID.fromString("00002902-0000-1000-8000-00805F9B34FB");
@@ -133,19 +134,7 @@ public class BLEAdmin {
     return mBluetoothAdapter;
   }
 
-  /*public void scan(BleScanConfig config,BleScanCallback callback){
-      L.e("开始扫描");
-    if (!BleScanner.isScanning.get()){
-      BleScanner.getINSTANCE(mContext).scan(config,callback);
-    }
 
-  }
-
-  @TargetApi(VERSION_CODES.LOLLIPOP)
-  public void stopScan(){
-    L.e("停止扫描");
-    BleScanner.getINSTANCE(mContext).cancelScan();
-  }*/
 
   private void registerBtStateReceiver(Context context) {
     IntentFilter filter = new IntentFilter();
@@ -209,12 +198,12 @@ public class BLEAdmin {
     mAdvertiseData = new AdvertiseData.Builder()
         .setIncludeDeviceName(true)
         .setIncludeTxPowerLevel(true)
+        .addServiceUuid(new ParcelUuid(UUID_ADV_SERVER))
         .build();
 
     //        .addServiceUuid(new ParcelUuid(UUID_SERVER))
-    /*,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40*/
     mScanResponseData = new AdvertiseData.Builder()
-//        .addServiceUuid(new ParcelUuid(UUID_SERVER))
+//        .addServiceUuid(new ParcelUuid(UUID_ADV_SERVER))
         .setIncludeTxPowerLevel(true)
         .addServiceData(new ParcelUuid(UUID_SERVER),new byte[]{0,2,3/*,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40*/})
         .build();
