@@ -22,7 +22,6 @@ import android.os.Handler;
 import android.os.ParcelUuid;
 import android.support.annotation.RequiresApi;
 import cc.noharry.bleserver.L;
-import java.util.Arrays;
 import java.util.UUID;
 
 /**
@@ -320,7 +319,7 @@ public class BLEAdmin {
     public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] requestBytes) {
       L.e(String.format("3.onCharacteristicWriteRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
       L.i("收到数据 hex:"+byte2HexStr(requestBytes)+" str:"+new String(requestBytes)+" 长度:"+requestBytes.length);
-      bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, "write success1".getBytes());
+      bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.getValue());
       //4.处理响应内容
       onResponseToClient(requestBytes, device, requestId, characteristic);
     }
@@ -341,6 +340,7 @@ public class BLEAdmin {
       //            L.e(TAG, String.format("2.onDescriptorWriteRequest：requestId = %s, preparedWrite = %s, responseNeeded = %s, offset = %s, value = %s,", requestId, preparedWrite, responseNeeded, offset, OutputStringUtil.toHexString(value)));
 
       // now tell the connected device that this was all successfull
+
       bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, value);
     }
 
@@ -355,7 +355,6 @@ public class BLEAdmin {
     public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor) {
       L.e(String.format("onDescriptorReadRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
       L.e(String.format("onDescriptorReadRequest：requestId = %s", requestId));
-//                  super.onDescriptorReadRequest(device, requestId, offset, descriptor);
       bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, null);
     }
 
@@ -390,27 +389,12 @@ public class BLEAdmin {
   private void onResponseToClient(byte[] reqeustBytes, BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic) {
     L.e(String.format("4.onResponseToClient：device name = %s, address = %s", device.getName(), device.getAddress()));
     L.e(String.format("4.onResponseToClient：requestId = %s", requestId));
-    //        String msg = OutputStringUtil.transferForPrint(reqeustBytes);
     String msg = new String(reqeustBytes);
     L.i("4.收到 hex:" +byte2HexStr(reqeustBytes)+" str:"+msg);
     currentDevice = device;
-    sendMessage(characteristic,"write success");
+    sendMessage(characteristic,"收到:"+msg);
   }
 
-  private void sendMessage(String message) {
-    byte[] i=new byte[]{6};
-//    characteristicRead.setValue(message.getBytes());
-//    mCharacteristicWrite.setValue(message.getBytes());
-    characteristicRead.setValue(i);
-    mCharacteristicWrite.setValue(i);
-    if (currentDevice != null){
-      bluetoothGattServer.notifyCharacteristicChanged(currentDevice, characteristicRead, false);
-      bluetoothGattServer.notifyCharacteristicChanged(currentDevice, mCharacteristicWrite, false);
-    }
-
-
-    L.i("4.发送:" + message);
-  }
 
 
   private void sendMessage(BluetoothGattCharacteristic characteristic,String message) {
@@ -422,19 +406,6 @@ public class BLEAdmin {
   }
 
 
-  private void sendMessage(byte[] message) {
-//    byte[] i=new byte[]{6};
-//    characteristicRead.setValue(message.getBytes());
-//    mCharacteristicWrite.setValue(message.getBytes());
-    characteristicRead.setValue(message);
-    mCharacteristicWrite.setValue(message);
-    if (currentDevice != null){
-      bluetoothGattServer.notifyCharacteristicChanged(currentDevice, characteristicRead, false);
-      bluetoothGattServer.notifyCharacteristicChanged(currentDevice, mCharacteristicWrite, false);
-    }
-
-    L.i("4.发送:" + Arrays.toString(message));
-  }
 
 
   private void sendMessage(BluetoothGattCharacteristic characteristic,byte[] message) {
