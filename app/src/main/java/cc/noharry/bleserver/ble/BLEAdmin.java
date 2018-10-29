@@ -319,6 +319,7 @@ public class BLEAdmin {
     public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic, boolean preparedWrite, boolean responseNeeded, int offset, byte[] requestBytes) {
       L.e(String.format("3.onCharacteristicWriteRequest：device name = %s, address = %s", device.getName(), device.getAddress()));
       L.i("收到数据 hex:"+byte2HexStr(requestBytes)+" str:"+new String(requestBytes)+" 长度:"+requestBytes.length);
+      //发送给client的响应
       bluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.getValue());
       //4.处理响应内容
       onResponseToClient(requestBytes, device, requestId, characteristic);
